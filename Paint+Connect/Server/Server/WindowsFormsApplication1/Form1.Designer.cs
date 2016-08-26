@@ -336,9 +336,8 @@
             this.radioButton1.Name = "radioButton1";
             this.radioButton1.Size = new System.Drawing.Size(99, 16);
             this.radioButton1.TabIndex = 54;
-            this.radioButton1.TabStop = true;
             this.radioButton1.Text = "Draw with client";
-            this.radioButton1.UseVisualStyleBackColor = true;
+            this.radioButton1.UseVisualStyleBackColor = false;
             this.radioButton1.CheckedChanged += new System.EventHandler(this.radioButton1_CheckedChanged);
             // 
             // radioButton2
@@ -348,7 +347,6 @@
             this.radioButton2.Name = "radioButton2";
             this.radioButton2.Size = new System.Drawing.Size(121, 16);
             this.radioButton2.TabIndex = 55;
-            this.radioButton2.TabStop = true;
             this.radioButton2.Text = "Stop draw with client";
             this.radioButton2.UseVisualStyleBackColor = true;
             this.radioButton2.CheckedChanged += new System.EventHandler(this.radioButton2_CheckedChanged);

@@ -466,19 +466,27 @@ namespace WindowsFormsApplication1
         private void radioButton1_CheckedChanged(object sender, EventArgs e)
         {
 
-            if (connect_client == false)
+            if (connect_client == false && radioButton1.Checked==true)
             {
                 MessageBox.Show("You are not connect yet");
-                
-                return;
+                radioButton1.Checked = false;
+
+               // return;
             }
             else
                 connect = true;
+         /*   if(radioButton1.Checked == true)
+            {
+                radioButton1.Checked = false;
+            }*/
+                  
         }
 
         private void radioButton2_CheckedChanged(object sender, EventArgs e)
         {
             connect = false;
+            radioButton1.Checked = false;
+           
         }
 
         private void button2_Click(object sender, EventArgs e)

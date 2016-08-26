@@ -25,6 +25,7 @@ namespace Client
         delegate void setLabelDel(String dir);
         Graphics g;
         bool connect = false;
+        bool connect_server = false;
         Color server_color = Color.Red;
         Color client_color = Color.Blue;
         Thread clientThread;
@@ -60,7 +61,7 @@ namespace Client
                 tcpClient.Connect(serverhost);
                 networkStream = tcpClient.GetStream();
                 Console.WriteLine("Server is connected....");
-                connect = true;
+                connect_server = true;
                 clientThread = new Thread(reviceThreadProc);
                 clientThread.Start();
             }
@@ -517,6 +518,23 @@ namespace Client
                 // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
                 networkStream.Write(color_change_for_client, 0, color_change_for_client.Length);
             }
+        }
+
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (connect_server == false && radioButton1.Checked == true)
+            {
+                MessageBox.Show("You are not connect yet");
+                radioButton1.Checked = false;
+            }
+            else
+                connect = true;
+        }
+
+        private void radioButton2_CheckedChanged(object sender, EventArgs e)
+        {
+            connect = false;
+            radioButton1.Checked = false;
         }
 
         private void Picturebox2_MouseDown(object sender,System.Windows.Forms.MouseEventArgs e)
