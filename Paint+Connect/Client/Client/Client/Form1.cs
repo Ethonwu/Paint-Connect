@@ -42,16 +42,7 @@ namespace Client
         }
         private void button1_Click(object sender, EventArgs e)
         {
-            string hostname;
-            hostname = Dns.GetHostName();
-            IPHostEntry host;
-            host = Dns.GetHostEntry(hostname);
-            foreach (IPAddress addrList in host.AddressList)
-            {
-                // Console.WriteLine( addrList);
-                comboBox1.Items.Add(addrList);
-            }
-            comboBox1.SelectedIndex = 0;
+        
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -81,6 +72,17 @@ namespace Client
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            string hostname;
+            hostname = Dns.GetHostName();
+            IPHostEntry host;
+            host = Dns.GetHostEntry(hostname);
+            foreach (IPAddress addrList in host.AddressList)
+            {
+                if (addrList.AddressFamily == AddressFamily.InterNetwork)
+                    // Console.WriteLine( addrList);
+                    comboBox1.Items.Add(addrList);
+            }
+            comboBox1.SelectedIndex = 0;
             bmp = new Bitmap(pictureBox2.Width, pictureBox2.Height);
             g = Graphics.FromImage(bmp);
             g.FillRectangle(new SolidBrush(Color.White), 0, 0, pictureBox2.Width, pictureBox2.Height);
@@ -100,16 +102,57 @@ namespace Client
         {
             byte[] msg;
             msg = Encoding.Default.GetBytes("Mesg"+ textBox2.Text);
-            //   clientSocket.Send(msg, 0, msg.Length, SocketFlags.None);
-            networkStream.Write(msg, 0, msg.Length);
+            //   clientSocket.Send(msg, 0, msg.Length, SocketFlags.None);            
+            if(connect==true)
+                networkStream.Write(msg, 0, msg.Length);
+            listBox1.ForeColor = Color.Blue;
+            listBox1.Items.Add("Client:" + textBox2.Text);
+            textBox2.Clear();
         }
-
+        private void enter_send(object sender, System.Windows.Forms.KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                button3.Focus();
+                button3_Click(sender, e);
+                textBox2.Focus();
+                textBox2.Clear();
+            }
+        }
+        private void textBox2_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                textBox2.Clear();
+            }
+        }
         private void button4_Click(object sender, EventArgs e)
         {
             //    clientSocket.Shutdown(SocketShutdown.Both);
             //   clientSocket.Close();
             networkStream.Close();
             connect = false;
+        }
+        private void listBox1_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index >= 0)
+            {
+                e.DrawBackground();
+                Brush mybsh = Brushes.Black;
+
+                if (listBox1.Items[e.Index].ToString().IndexOf("Server:") != -1)
+                {
+                    mybsh = Brushes.Red;
+                }
+                else if (listBox1.Items[e.Index].ToString().IndexOf("Client:") != -1)
+                {
+                    mybsh = Brushes.Blue;
+                }
+
+                e.DrawFocusRectangle();
+
+                e.Graphics.DrawString(listBox1.Items[e.Index].ToString(), e.Font, mybsh, e.Bounds, StringFormat.GenericDefault);
+            }
         }
         private void reviceThreadProc()
         {
@@ -129,30 +172,7 @@ namespace Client
                         {
                             case "Mesg":
                                 setText(tmpStr.Substring(4, tmpStr.Length - 4));
-                                break;
-                            case "File":
-                                string path = @"c:\test.jpeg";
-                                FileStream fs = new FileStream(path, FileMode.OpenOrCreate);
-                                fs.Write(bytes, 4, rcvBytes-4);
-                                do
-                                {
-                                    //   rcvBytes = clientSocket.Receive(bytes, 0, bytes.Length, SocketFlags.None);
-                                    rcvBytes = networkStream.Read(bytes, 0, bytes.Length);
-                                    tmpStr = Encoding.Default.GetString(bytes, rcvBytes-4, 4);
-                                    if(tmpStr == "####")
-                                    {
-                                        fs.Write(bytes, 0, rcvBytes-4);
-                                    }
-                                    else
-                                    {
-                                        fs.Write(bytes, 0, rcvBytes);
-                                    }
-                                }
-                                while (tmpStr == "####");
-                                fs.Close();
-                                Console.WriteLine("File is received sucessfully");
-                                setPictureBox(path);                          
-                                break;
+                                break;                                                         
                             case "Draw":
                                 drowing(tmpStr);
                                 break;
@@ -161,7 +181,6 @@ namespace Client
                                 break;
                             case "iMup":
                                 isMouseUp = false;
-
                                 break;
                             case "Clea":
                                 g.Clear(Color.White);
@@ -172,41 +191,7 @@ namespace Client
                                  break;
                             case "chco":
                                 change_color(tmpStr.Substring(4, tmpStr.Length - 4));
-                                break;
-                            case "Larg":
-                                string lapath= @"C:\test.bin";
-
-                                FileStream fs1 =new FileStream(lapath, FileMode.OpenOrCreate);
-                                double len;
-                                string len_conv;                        
-                                if(tmpStr.Length<=4)
-                                {
-                                    rcvBytes = networkStream.Read(bytes, 0, 10);                                    
-                                    len_conv = Encoding.Default.GetString(bytes, 0,rcvBytes);
-                                    len = Convert.ToDouble(len_conv);                                     
-                                }
-                                else
-                                {
-                                    len_conv = tmpStr.Substring(4, 10);
-                                    len = Convert.ToDouble(len_conv);
-                                    fs1.Write(bytes, 14, rcvBytes - 14);
-                                    len = len - (rcvBytes-14);
-                                }
-                                double ratio = len / 200;
-                                int trdou = Convert.ToInt32(ratio / len);
-                                setProgess("Max", trdou);
-                                setProgess("Value", 0);
-
-                                do
-                                {
-                                    rcvBytes = networkStream.Read(bytes, 0, rcvBytes);
-                                    fs1.Write(bytes, 0, rcvBytes);
-                                    len -= rcvBytes;
-                                    setProgess("Value", progressBar1.Maximum - trdou);
-                                }
-                                while (len ==0);
-                                fs1.Close();
-                                break;                          
+                                break;                            
                         }
                     }
 
@@ -218,26 +203,7 @@ namespace Client
                 MessageBox.Show(ex.ToString());
             }
         }
-        private void setProgess(string p,int value)
-        {
-            if(progressBar1.InvokeRequired == true)
-            {
-                setProgressDel d = new setProgressDel(setProgess);
-                this.Invoke(d, p, value);
-            }
-            else
-            {
-                switch(p)
-                {
-                    case "Max":
-                        progressBar1.Maximum = value;
-                        break;
-                    case "Value":
-                        progressBar1.Value = value;
-                        break;
-                }
-            }
-        }
+      
         private void drowing(string tmpStr)
         {
             isMouseUp = true;
@@ -291,24 +257,14 @@ namespace Client
             }
             else
             {
-                textBox2.Text = tmpStr;
+                //  textBox2.Text = tmpStr;
+                listBox1.ForeColor = Color.Red;
+              //  textBox2.ForeColor = Color.Red;
+                string ser = "Server=";
+                ser = System.Drawing.Color.Black.ToString();
+                listBox1.Items.Add("Server:" + tmpStr);
             }
-        }
-        private void setPictureBox(String filename)
-        {
-            if(pictureBox1.InvokeRequired == true)
-            {
-                setPictureBoxDel d = new setPictureBoxDel(setPictureBox);
-                this.Invoke(d, filename);
-                
-            }
-            else
-            {
-                pictureBox1.ImageLocation = filename;
-            }
-        }
-
-       
+        }            
         private void Form1_FormClosing(Object sender,System.Windows.Forms.FormClosingEventArgs e)
         {
             if (tcpClient != null)
@@ -361,12 +317,206 @@ namespace Client
 
         private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
-           
+            byte[] send_client_size;
+            client_size = comboBox2.SelectedIndex;
+            send_client_size = Encoding.Default.GetBytes("chsi" + client_size);
+            if(connect==true)
+            networkStream.Write(send_client_size, 0, send_client_size.Length);
         }
 
         private void setLabel(object sender, EventArgs e)
         {
 
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+          
+        }
+
+        private void textBox2_TextChanged(object sender, EventArgs e)
+        {
+            textBox2.ForeColor = Color.Blue;
+        }
+
+        private void pictureBox1_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button6_Click_1(object sender, EventArgs e)
+        {
+
+            saveFileDialog1.Filter = "(*.jpg;*.jpeg;*.PNG;*.png)|*.jpg;*.jpeg;*.PNG;*.png";
+            saveFileDialog1.Title = "Chose where you want to save";
+            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                Bitmap mp = new Bitmap(pictureBox2.Image);
+                bmp.Save(saveFileDialog1.FileName);
+
+            }
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            client_size = 1;
+            client_color = Color.Blue;
+            g.Clear(Color.White);
+            pictureBox2.Image = bmp;
+        }
+
+        private void pictureBox1_Click_2(object sender, EventArgs e)
+        {
+            client_color = Color.Red;
+            if (connect == true)
+            {
+                byte[] color_change_for_client;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_client = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                networkStream.Write(color_change_for_client, 0, color_change_for_client.Length);
+            }
+        }
+
+        private void pictureBox6_Click(object sender, EventArgs e)
+        {
+            client_color = Color.Black;
+            if (connect == true)
+            {
+                byte[] color_change_for_client;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_client = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                networkStream.Write(color_change_for_client, 0, color_change_for_client.Length);
+            }
+        }
+
+        private void pictureBox5_Click(object sender, EventArgs e)
+        {
+            client_color = Color.Gray;
+            if (connect == true)
+            {
+                byte[] color_change_for_client;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_client = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                networkStream.Write(color_change_for_client, 0, color_change_for_client.Length);
+            }
+        }
+
+        private void pictureBox4_Click(object sender, EventArgs e)
+        {
+            client_color = Color.Yellow;
+            if (connect == true)
+            {
+                byte[] color_change_for_client;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_client = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                networkStream.Write(color_change_for_client, 0, color_change_for_client.Length);
+            }
+        }
+
+        private void pictureBox3_Click(object sender, EventArgs e)
+        {
+            client_color = Color.Green;
+            if (connect == true)
+            {
+                byte[] color_change_for_client;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_client = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                networkStream.Write(color_change_for_client, 0, color_change_for_client.Length);
+            }
+        }
+
+        private void pictureBox12_Click(object sender, EventArgs e)
+        {
+            client_color = Color.Orange;
+            if (connect == true)
+            {
+                byte[] color_change_for_client;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_client = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                networkStream.Write(color_change_for_client, 0, color_change_for_client.Length);
+            }
+        }
+
+        private void pictureBox11_Click(object sender, EventArgs e)
+        {
+            client_color = Color.Blue;
+            if (connect == true)
+            {
+                byte[] color_change_for_client;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_client = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                networkStream.Write(color_change_for_client, 0, color_change_for_client.Length);
+            }
+        }
+
+        private void pictureBox10_Click(object sender, EventArgs e)
+        {
+            client_color = Color.Brown;
+            if (connect == true)
+            {
+                byte[] color_change_for_client;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_client = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                networkStream.Write(color_change_for_client, 0, color_change_for_client.Length);
+            }
+        }
+
+        private void pictureBox9_Click(object sender, EventArgs e)
+        {
+            client_color = Color.Pink;
+            if (connect == true)
+            {
+                byte[] color_change_for_client;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_client = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                networkStream.Write(color_change_for_client, 0, color_change_for_client.Length);
+            }
+        }
+
+        private void pictureBox8_Click(object sender, EventArgs e)
+        {
+            client_color = Color.Purple;
+            if (connect == true)
+            {
+                byte[] color_change_for_client;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_client = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                networkStream.Write(color_change_for_client, 0, color_change_for_client.Length);
+            }
+        }
+
+        private void pictureBox7_Click(object sender, EventArgs e)
+        {
+            client_color = Color.White;
+            if (connect == true)
+            {
+                byte[] color_change_for_client;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_client = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                networkStream.Write(color_change_for_client, 0, color_change_for_client.Length);
+            }
         }
 
         private void Picturebox2_MouseDown(object sender,System.Windows.Forms.MouseEventArgs e)
@@ -391,21 +541,21 @@ namespace Client
         {
             byte[] togomove;
             string move_location;
-            byte[] send_client_size;
-            
-            if(e.Button == MouseButtons.Left)
+           // byte[] send_client_size;
+        
+            if (e.Button == MouseButtons.Left)
             {
                 move_location = "Move" + "[" + e.X + "]" + "[" + e.Y + "]";
-                client_size = comboBox2.SelectedIndex;
+             //   client_size = comboBox2.SelectedIndex;
 
                 if (connect == true)
                 {
                     togomove = Encoding.Default.GetBytes(move_location);
-                    send_client_size = Encoding.Default.GetBytes("chsi" + client_size);
+                   // send_client_size = Encoding.Default.GetBytes("chsi" + client_size);
                     //clientSocket.Send(togomove, 0, togomove.Length, SocketFlags.None);
                     //clientSocket.Send(send_client_size, 0, send_client_size.Length, SocketFlags.None);
                     networkStream.Write(togomove, 0, togomove.Length);
-                    networkStream.Write(send_client_size, 0, send_client_size.Length);
+                    //.Write(send_client_size, 0, send_client_size.Length);
                 }
                
                 g.DrawLine(new Pen(client_color, client_size), oldx, oldy, e.X, e.Y);

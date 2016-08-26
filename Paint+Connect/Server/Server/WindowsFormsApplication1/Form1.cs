@@ -12,12 +12,16 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Text.RegularExpressions;
 using System.IO;
+using System.Reflection;
+using System.Drawing.Drawing2D;
+
 namespace WindowsFormsApplication1
 {
     
     public partial class Form1 : Form
     {
         //Socket clientSocket = null;
+      
         public Graphics g;
         public Bitmap bmp;
         int oldx, oldy;
@@ -28,97 +32,61 @@ namespace WindowsFormsApplication1
         Thread acceptThread;
         ListenClient lc;
         bool connect = false;
+        bool connect_client = false;
         delegate void setLabelDel(String dir);
         Color server_color = Color.Red;
         public Color client_color = Color.Blue;
-       
-        //delegate void setTextDel(String tmpStr);      
-        //
-        //  bool isMouseUp = false;
-        // int oldx1, oldy1;
-        //  int oldx2, oldy2;
+
         public Form1()
         {
             InitializeComponent();
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            string hostname;
-            hostname =  Dns.GetHostName();
-            IPHostEntry host;
-            host = Dns.GetHostEntry(hostname);
-            foreach(IPAddress addrList in host.AddressList)
-           {              
-                 // Console.WriteLine( addrList);
-                  comboBox1.Items.Add(addrList);
-           }
-            comboBox1.SelectedIndex = 0;
-         }
-        private void button2_Click(object sender, EventArgs e)
-        {
-            try
-            {
-           //     serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,ProtocolType.Tcp);
-                 IPAddress serverIp =IPAddress.Parse(comboBox1.Text);
-                // IPEndPoint serverhost =  new IPEndPoint(serverIp,int.Parse(textBox1.Text));
-                IPEndPoint serverhost = new IPEndPoint(serverIp,888);
-             //   serverSocket.Bind(serverhost);
-               //  serverSocket.Listen(10);
-                tcpListener = new TcpListener(serverhost);
-                tcpListener.Start(10);
-                Console.WriteLine("Server is listening");
-            }  
-            catch(Exception ex)
-                {
-                    MessageBox.Show(ex.Message,"Error",MessageBoxButtons.OK,MessageBoxIcon.Error);
-                }             
-        }
-        private void button3_Click(object sender, EventArgs e)
-        {
-            try
-            {
-
-                //clientSocket = serverSocket.Accept();
-                //Console.WriteLine(clientSocket.RemoteEndPoint.ToString() +"is connected.");
-                //  lc = new ListenClient(serverSocket, this); 
-                lc = new ListenClient(tcpListener,this);
-            //    lc = new ListenClient(tcpListener,);
-             //   lc = new ListenClient(tcpListener, this);
-
-                acceptThread = new Thread(lc.ServerThreadProc);
-                acceptThread.Start();
-                connect = true;
-                    }
-            catch(Exception ex)
-            {
-                MessageBox.Show(ex.Message, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }              
+ 
         private void button5_Click(object sender, EventArgs e)
-        {
-            //  lc.clientSocket.Shutdown(SocketShutdown.Both);
-            //lc.clientSocket.Close();
-            //serverSocket.Close();
-
+        {         
             lc.networkstream.Close();
             tcpListener.Stop();
             connect = false;
           
-        }
+        } 
         private void Form1_Load(object sender, EventArgs e)
         {
+            string hostname;
+            hostname = Dns.GetHostName();
+            IPHostEntry host;
+            host = Dns.GetHostEntry(hostname);
+            foreach (IPAddress addrList in host.AddressList)
+            {
+                if(addrList.AddressFamily == AddressFamily.InterNetwork)
+                // Console.WriteLine( addrList);
+                comboBox1.Items.Add(addrList);
+            }
+            comboBox1.SelectedIndex = 0;
             bmp = new Bitmap(pictureBox1.Width, pictureBox1.Height);
             g = Graphics.FromImage(bmp);
             g.FillRectangle(new SolidBrush(Color.White), 0, 0, pictureBox1.Width, pictureBox1.Height);
             pictureBox1.Image = bmp;
-           
-        }
+            
+        }    
+      
         private void textBox2_TextChanged(object sender, EventArgs e)
         {
-
+            textBox2.ForeColor = Color.Red;
+            
         }
-       private void Form1_Form(Object sender,System.Windows.Forms.FormClosedEventArgs e)
+        private void enter_send(object sender,System.Windows.Forms.KeyEventArgs e)
+        {
+            if(e.KeyCode == Keys.Enter)
+            {
+                button6.Focus();
+                button6_Click(sender, e);
+                textBox2.Focus();
+                textBox2.Clear();
+            }
+        }
+      
+        private void Form1_Form(Object sender,System.Windows.Forms.FormClosedEventArgs e)
         {
             if (lc != null)
             {
@@ -139,68 +107,46 @@ namespace WindowsFormsApplication1
         {
             Byte[] msg = Encoding.Default.GetBytes("Mesg" + textBox2.Text);
             //lc.clientSocket.Send(msg, 0, msg.Length, SocketFlags.None);
+            if(connect==true)
             lc.networkstream.Write(msg, 0, msg.Length);
-        }
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
+            // listBox1.ForeColor = Color.Red;      
+           // string se = "Server:"+textBox2.Text;
            
+          //   se = System.Drawing.Color.Red.ToString();
+            listBox1.Items.Add("Server:"+textBox2.Text);
+         
+            textBox2.Clear();
+        }
+        private void listBox1_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index >= 0)
+            {
+                e.DrawBackground();
+                Brush mybsh = Brushes.Black;
+                
+                if (listBox1.Items[e.Index].ToString().IndexOf("Server:") != -1)
+                {
+                    mybsh = Brushes.Red;
+                }
+                else if (listBox1.Items[e.Index].ToString().IndexOf("Client:") != -1)
+                {
+                    mybsh = Brushes.Blue;
+                }
+                
+                e.DrawFocusRectangle();
+               
+                e.Graphics.DrawString(listBox1.Items[e.Index].ToString(), e.Font, mybsh, e.Bounds, StringFormat.GenericDefault);
+            }
         }
 
         private void button7_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openFileDialog1 = new OpenFileDialog();
-            openFileDialog1.Filter = "認意格式|*.*";
-            openFileDialog1.Title = "請選擇想要傳送的檔案";
-            if(openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                Byte[] preBuffer = Encoding.Default.GetBytes("File");
-                Byte[] postBuffer = Encoding.Default.GetBytes("####");
-                //   lc.clientSocket.SendFile(openFileDialog1.FileName, preBuffer, postBuffer, TransmitFileOptions.UseDefaultWorkerThread);
-                FileStream fs = new FileStream(openFileDialog1.FileName, FileMode.Open);
-                byte[] bytes = new byte[1024];
-                int byteRead;
-                lc.networkstream.Write(preBuffer, 0, preBuffer.Length);
-                do
-                {
-                    byteRead = fs.Read(bytes, 0, bytes.Length);
-                    lc.networkstream.Write(bytes, 0, byteRead);
-                }
-                while (byteRead > 0);
-                lc.networkstream.Write(postBuffer, 0, postBuffer.Length);
-                fs.Close();
-            }
+          
 
         }
         private void button8_Click(object sender, EventArgs e) //Send Big File
         {
-            OpenFileDialog openFileDialog1 = new OpenFileDialog();
-            openFileDialog1.Filter = "認意格式|*.*";
-            openFileDialog1.Title = "請選擇想要傳送的檔案";
-            if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                //  Byte[] preBuffer = Encoding.Default.GetBytes("File");
-                Byte[] preBuffer = Encoding.Default.GetBytes("Larg");
-                Byte[] postBuffer = Encoding.Default.GetBytes("####");
-                //   lc.clientSocket.SendFile(openFileDialog1.FileName, preBuffer, postBuffer, TransmitFileOptions.UseDefaultWorkerThread);
-                FileStream fs = new FileStream(openFileDialog1.FileName, FileMode.Open);
-                byte[] bytes = new byte[1024];
-                int byteRead;
-                FileInfo fi = new FileInfo(openFileDialog1.FileName);
-                string tmp = fi.Length.ToString();
-                byte[] lenBuffer = Encoding.Default.GetBytes(tmp.PadLeft(10)); 
-              
-                lc.networkstream.Write(preBuffer, 0, preBuffer.Length);
-                lc.networkstream.Write(lenBuffer, 0, lenBuffer.Length);
-                do
-                {
-                    byteRead = fs.Read(bytes, 0, bytes.Length);
-                    lc.networkstream.Write(bytes, 0, byteRead);
-                }
-                while (byteRead > 0);
-               // lc.networkstream.Write(postBuffer, 0, postBuffer.Length);
-                fs.Close();
-            }
+         
         }
         private void picture_box1_MouseDown(object sender,System.Windows.Forms.MouseEventArgs e)
         {
@@ -224,20 +170,22 @@ namespace WindowsFormsApplication1
         {
             string move_location;
             byte[] togomove;
-            byte[] send_server_size;
-            if(e.Button == MouseButtons.Left)
+            //byte[] send_server_size;
+         
+
+            if (e.Button == MouseButtons.Left)
             {
                 move_location = "Move" + "[" + e.X + "]" + "[" + e.Y + "]";
                 //Console.WriteLine(move_location);
-                server_size = comboBox2.SelectedIndex;
+               // server_size = comboBox2.SelectedIndex;
                 if(connect == true)
                 {
                     togomove = Encoding.Default.GetBytes(move_location);
-                    send_server_size = Encoding.Default.GetBytes("chsi" + server_size);
+                    //send_server_size = Encoding.Default.GetBytes("chsi" + server_size);
                     //  lc.clientSocket.Send(togomove, 0, togomove.Length, SocketFlags.None);
                     // lc.clientSocket.Send(send_server_size, 0, send_server_size.Length, SocketFlags.None);
                     lc.networkstream.Write(togomove, 0, togomove.Length);
-                    lc.networkstream.Write(send_server_size, 0, send_server_size.Length);
+                 //   lc.networkstream.Write(send_server_size, 0, send_server_size.Length);
                 }
                 g.DrawLine(new Pen(server_color, server_size), oldx, oldy, e.X, e.Y);
                 pictureBox1.Image = bmp;
@@ -292,43 +240,284 @@ namespace WindowsFormsApplication1
                 lc.networkstream.Write(enough, 0, enough.Length);
         }
 
-        private void progressBar1_Click(object sender, EventArgs e)
+        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            byte[] send_server_size;
+            server_size = comboBox2.SelectedIndex;
+            send_server_size = Encoding.Default.GetBytes("chsi" + server_size);
+            if(connect==true)
+            lc.networkstream.Write(send_server_size, 0, send_server_size.Length);
+        }
+
+        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
+        private void textBox2_MouseDown(object sender,System.Windows.Forms.MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                textBox2.Clear();
+            }
+        }
+        private void button1_click(object sender,EventArgs e)
+        {
 
-        private void pictureBox1_Click(object sender, EventArgs e)
+        }
+        private void button9_Click(object sender, EventArgs e)
         {
           
         }
+
+        private void button10_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                //     serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,ProtocolType.Tcp);
+                IPAddress serverIp = IPAddress.Parse(comboBox1.Text);
+                // IPEndPoint serverhost =  new IPEndPoint(serverIp,int.Parse(textBox1.Text));
+                IPEndPoint serverhost = new IPEndPoint(serverIp, 888);
+                //   serverSocket.Bind(serverhost);
+                //  serverSocket.Listen(10);
+                tcpListener = new TcpListener(serverhost);
+                tcpListener.Start(10);
+                Console.WriteLine("Server is listening");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            try
+            {
+
+                //clientSocket = serverSocket.Accept();
+                //Console.WriteLine(clientSocket.RemoteEndPoint.ToString() +"is connected.");
+                //  lc = new ListenClient(serverSocket, this); 
+                lc = new ListenClient(tcpListener, this);
+                //    lc = new ListenClient(tcpListener,);
+                //   lc = new ListenClient(tcpListener, this);
+
+                acceptThread = new Thread(lc.ServerThreadProc);
+                acceptThread.Start();
+                connect_client = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+         
+        }
+
+        private void pictureBox2_Click(object sender, EventArgs e)
+        {
+            
+            server_color = Color.Red;
+            if(connect==true)
+            {
+                byte[] color_change_for_server;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_server = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                lc.networkstream.Write(color_change_for_server, 0, color_change_for_server.Length);
+            }
+        }
+
+        private void pictureBox6_Click(object sender, EventArgs e)
+        {
+            server_color = Color.Black;
+            if (connect == true)
+            {
+                byte[] color_change_for_server;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_server = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                lc.networkstream.Write(color_change_for_server, 0, color_change_for_server.Length);
+            }
+        }
+
+        private void pictureBox5_Click(object sender, EventArgs e)
+        {
+            server_color = Color.Gray;
+            if (connect == true)
+            {
+                byte[] color_change_for_server;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_server = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                lc.networkstream.Write(color_change_for_server, 0, color_change_for_server.Length);
+            }
+        }
+
+        private void pictureBox4_Click(object sender, EventArgs e)
+        {
+            server_color = Color.Yellow;
+            if (connect == true)
+            {
+                byte[] color_change_for_server;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_server = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                lc.networkstream.Write(color_change_for_server, 0, color_change_for_server.Length);
+            }
+        }
+
+        private void pictureBox3_Click(object sender, EventArgs e)
+        {
+            server_color = Color.Green;
+            if (connect == true)
+            {
+                byte[] color_change_for_server;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_server = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                lc.networkstream.Write(color_change_for_server, 0, color_change_for_server.Length);
+            }
+        }
+
+        private void pictureBox12_Click(object sender, EventArgs e)
+        {
+            server_color = Color.Orange;
+            if (connect == true)
+            {
+                byte[] color_change_for_server;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_server = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                lc.networkstream.Write(color_change_for_server, 0, color_change_for_server.Length);
+            }
+        }
+
+        private void pictureBox11_Click(object sender, EventArgs e)
+        {
+            server_color = Color.Blue;
+            if (connect == true)
+            {
+                byte[] color_change_for_server;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_server = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                lc.networkstream.Write(color_change_for_server, 0, color_change_for_server.Length);
+            }
+        }
+
+        private void pictureBox10_Click(object sender, EventArgs e)
+        {
+            server_color = Color.Brown;
+            if (connect == true)
+            {
+                byte[] color_change_for_server;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_server = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                lc.networkstream.Write(color_change_for_server, 0, color_change_for_server.Length);
+            }
+        }
+
+        private void pictureBox9_Click(object sender, EventArgs e)
+        {
+            server_color = Color.Pink;
+            if (connect == true)
+            {
+                byte[] color_change_for_server;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_server = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                lc.networkstream.Write(color_change_for_server, 0, color_change_for_server.Length);
+            }
+        }
+
+        private void pictureBox8_Click(object sender, EventArgs e)
+        {
+            server_color = Color.Purple;
+            if (connect == true)
+            {
+                byte[] color_change_for_server;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);
+                //  Console.WriteLine(color_str);
+                color_change_for_server = Encoding.Default.GetBytes("chco" + color_str);
+                // lc.clientSocket.Send(color_change_for_server, 0, color_change_for_server.Length, SocketFlags.None);
+                lc.networkstream.Write(color_change_for_server, 0, color_change_for_server.Length);
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            server_size = 1;
+            server_color = Color.Red;
+            g.Clear(Color.White);
+            pictureBox1.Image = bmp;
+
+        }
+
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+
+            if (connect_client == false)
+            {
+                MessageBox.Show("You are not connect yet");
+                
+                return;
+            }
+            else
+                connect = true;
+        }
+
+        private void radioButton2_CheckedChanged(object sender, EventArgs e)
+        {
+            connect = false;
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            saveFileDialog1.Filter = "(*.jpg;*.jpeg;*.PNG;*.png)|*.jpg;*.jpeg;*.PNG;*.png";          
+            saveFileDialog1.Title = "Chose where you want to save";
+            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                Bitmap mp = new Bitmap(pictureBox1.Image);
+                bmp.Save(saveFileDialog1.FileName);
+
+            }
+        }
+
+        private void pictureBox7_Click(object sender, EventArgs e)
+        {
+            server_color = Color.White;
+            if (connect == true)
+            {
+                byte[] color_change_for_server;
+                string color_str = System.Drawing.ColorTranslator.ToHtml(server_color);              
+                color_change_for_server = Encoding.Default.GetBytes("chco" + color_str);               
+                lc.networkstream.Write(color_change_for_server, 0, color_change_for_server.Length);
+            }
+        }    
     }
-
-
     class ListenClient
-    {
-        // private Socket serverSocket;
-        //public Socket clientSocket;
+    { 
         private TcpClient tcpClient;
         private TcpListener tcpListener;
         public NetworkStream networkstream;
         Thread clientThread;
         private Form1 f1 = new Form1();
-        delegate void setTextDel(String tmpStr);
-        //delegate void setLabelDel(String dir);
+        delegate void setTextDel(String tmpStr);        
         bool isMouseUp = false;
         int oldx1, oldy1;
-        int oldx2, oldy2;
-        //public object label4;
-       //  Graphics g;
-        // Bitmap bmp;
-            
-        int penWidth=1;
-     //   bmp = new Bitmap(f1.pictureBox1.Width, f1.pictureBox1.Height);
-    
+        int oldx2, oldy2;           
         public ListenClient(TcpListener serverSocket, Form1 tmpForm1)
-        {
-            //serverSocket = tmpSocket;
-            //f1 = tmpForm1;
+        {           
             this.tcpListener = serverSocket;
             f1 = tmpForm1;
          
@@ -339,14 +528,10 @@ namespace WindowsFormsApplication1
             {
                 try
                 {
-                    //  clientSocket = serverSocket.Accept();
                     tcpClient = tcpListener.AcceptTcpClient();
                     networkstream = tcpClient.GetStream();
                     clientThread = new Thread(receiveThreadProc);
-                    clientThread.Start();
-                    //Thread t = new Thread(receiveThreadProc);
-                    //  t.Start();
-                    //Console.WriteLine(clientSocket.RemoteEndPoint.ToString() + "is connected");
+                    clientThread.Start();                  
                     Console.WriteLine(tcpClient.Client.RemoteEndPoint.ToString() + "is connected");
                 }
                 catch (Exception ex)
@@ -363,13 +548,10 @@ namespace WindowsFormsApplication1
                 int rcvBytes;
                 string tmpStr;
                 do
-                {
-                    // rcvBytes = clientSocket.Receive(bytes, 0, bytes.Length, SocketFlags.None);
+                {                  
                     rcvBytes = networkstream.Read(bytes, 0, bytes.Length);
                     tmpStr = Encoding.Default.GetString(bytes, 0, rcvBytes);
-                    //setText(tmpStr);
-                   // MessageBox.Show("1");
-                 //   Console.WriteLine("Get:"+tmpStr);
+                    //setText(tmpStr);                 
                     if(tmpStr.Length >= 4)
                     {
                         switch(tmpStr.Substring(0,4))
@@ -434,8 +616,7 @@ namespace WindowsFormsApplication1
 
         }
         private void drowing_line(string tmpStr)
-        {
-           // Console.WriteLine(1);
+        {          
             isMouseUp = true;
             string input = tmpStr;
             String pattern = @"\[([^\[\]]+)\]";
@@ -464,10 +645,13 @@ namespace WindowsFormsApplication1
                 f1.Invoke(d, tmpStr);
             }
             else
-            {
-                f1.textBox2.Text = tmpStr;
+            {                                
+                string cli = "Client:";
+                cli = System.Drawing.Color.Blue.ToString();                 
+                 f1.listBox1.Items.Add("Client:" + tmpStr);        
             }
         }
+      
     }
   
 }
