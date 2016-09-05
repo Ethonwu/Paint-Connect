@@ -43,3 +43,12 @@ C:\Users\Ethon\Desktop\C# Message\Paint+Connect\Client\Client\Client\obj\Debug\C
 C:\Users\Ethon\Desktop\C# Message\Paint+Connect\Client\Client\Client\obj\Debug\Client.Form1.resources
 C:\Users\Ethon\Desktop\C# Message\Paint+Connect\Client\Client\Client\obj\Debug\Client.Properties.Resources.resources
 C:\Users\Ethon\Desktop\C# Message\Paint+Connect\Client\Client\Client\obj\Debug\Client.csproj.GenerateResource.Cache
+C:\Users\Ethon\Desktop\Paint-Connect\Paint+Connect\Client\Client\Client\bin\Debug\Client.exe.config
+C:\Users\Ethon\Desktop\Paint-Connect\Paint+Connect\Client\Client\Client\obj\Debug\Client.exe
+C:\Users\Ethon\Desktop\Paint-Connect\Paint+Connect\Client\Client\Client\obj\Debug\Client.pdb
+C:\Users\Ethon\Desktop\Paint-Connect\Paint+Connect\Client\Client\Client\bin\Debug\Client.exe
+C:\Users\Ethon\Desktop\Paint-Connect\Paint+Connect\Client\Client\Client\bin\Debug\Client.pdb
+C:\Users\Ethon\Desktop\Paint-Connect\Paint+Connect\Client\Client\Client\obj\Debug\Client.csprojResolveAssemblyReference.cache
+C:\Users\Ethon\Desktop\Paint-Connect\Paint+Connect\Client\Client\Client\obj\Debug\Client.Form1.resources
+C:\Users\Ethon\Desktop\Paint-Connect\Paint+Connect\Client\Client\Client\obj\Debug\Client.Properties.Resources.resources
+C:\Users\Ethon\Desktop\Paint-Connect\Paint+Connect\Client\Client\Client\obj\Debug\Client.csproj.GenerateResource.Cache

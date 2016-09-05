@@ -107,7 +107,7 @@ namespace WindowsFormsApplication1
         {
             Byte[] msg = Encoding.Default.GetBytes("Mesg" + textBox2.Text);
             //lc.clientSocket.Send(msg, 0, msg.Length, SocketFlags.None);
-            if(connect==true)
+            if(connect_client==true)
             lc.networkstream.Write(msg, 0, msg.Length);
             // listBox1.ForeColor = Color.Red;      
            // string se = "Server:"+textBox2.Text;

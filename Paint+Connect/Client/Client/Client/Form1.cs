@@ -104,7 +104,7 @@ namespace Client
             byte[] msg;
             msg = Encoding.Default.GetBytes("Mesg"+ textBox2.Text);
             //   clientSocket.Send(msg, 0, msg.Length, SocketFlags.None);            
-            if(connect==true)
+            if(connect_server==true)
                 networkStream.Write(msg, 0, msg.Length);
             listBox1.ForeColor = Color.Blue;
             listBox1.Items.Add("Client:" + textBox2.Text);
