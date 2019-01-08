@@ -8,4 +8,4 @@
 
 ### Example for synchronize drawing
 
-![image](https://github.com/Ethonwu/Paint-Connect/pic/syn_draw.gif)
+![image](https://github.com/Ethonwu/Paint-Connect/blob/master/pic/syn_draw.gif)
