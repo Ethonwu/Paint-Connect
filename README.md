@@ -4,7 +4,7 @@
 
 ### Example for chat
 
-![image](https://github.com/Ethonwu/Paint-Connect/pic/syn_talk.gif)
+![image](https://github.com/Ethonwu/Paint-Connect/blob/master/pic/syn_draw.gif)
 
 ### Example for synchronize drawing
 
